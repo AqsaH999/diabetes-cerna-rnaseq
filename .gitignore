@@ -1,0 +1,11 @@
+data/raw/
+data/reference/
+data/trimmed/
+data/bam/
+*.bam
+*.sam
+*.fastq
+*.fastq.gz
+results/**/*.pdf
+.Rhistory
+__pycache__/
