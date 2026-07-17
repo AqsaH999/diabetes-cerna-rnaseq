@@ -13,4 +13,6 @@ data/processed/GSE164416_counts.txt
 .DS_Store
 *.log
 how_to_read_qc*.pdf
-SraRunTable.csv
+.DS_Store
+*.log
+how_to_read_qc*.pdf
