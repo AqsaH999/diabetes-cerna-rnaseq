@@ -18,6 +18,7 @@ SOCS1,mRNA,8
 NR2F2-AS1,lncRNA,7
 hsa-miR-218-5p,miRNA,7
 hsa-miR-22-3p,miRNA,7
+FAS,mRNA,7
 NR4A2,mRNA,7
 MMP14,mRNA,7
 hsa-miR-17-5p,miRNA,6
@@ -26,7 +27,6 @@ hsa-miR-146a-5p,miRNA,6
 hsa-miR-19a-3p,miRNA,6
 hsa-miR-34a-5p,miRNA,6
 hsa-miR-133a-3p,miRNA,6
-FAS,mRNA,6
 hsa-miR-133b,miRNA,5
 hsa-miR-320a,miRNA,5
 hsa-miR-129-5p,miRNA,5
@@ -176,7 +176,6 @@ POSTN,mRNA,1
 PTP4A3,mRNA,1
 MARCKSL1,mRNA,1
 SIGLEC1,mRNA,1
-Fas,mRNA,1
 VCAN,mRNA,1
 COL16A1,mRNA,1
 CXCL2,mRNA,1

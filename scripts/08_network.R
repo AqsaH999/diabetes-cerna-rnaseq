@@ -7,6 +7,10 @@ library(data.table); library(igraph)
 lm <- fread("results/tables/lncRNA_miRNA_edges_final.csv")   # lncRNA -- miRNA
 mm <- fread("results/tables/miRNA_mRNA_edges_final.csv")     # miRNA  -- mRNA
 
+# fix symbol-casing duplicates (miRTarBase mixes e.g. "FAS" and "Fas")
+mm[, target_symbol := toupper(target_symbol)]
+mm <- unique(mm)
+
 # --- 1. Unified edge list with layer labels ---
 edges <- rbind(
   lm[, .(from = lncRNA,          to = mature_mirna_id, type = "lncRNA-miRNA")],
@@ -39,8 +43,6 @@ print(table(nodes$class))
 cat("\nConnected components:", comp$no, "| largest component:", max(comp$csize), "nodes\n")
 cat("Complete lncRNA-miRNA-mRNA axes:", nrow(triads), "\n")
 
-cat("\n--- lncRNA hubs (all) ---\n");        print(nodes[class == "lncRNA"])
-cat("\n--- Top 15 miRNA hubs ---\n");        print(head(nodes[class == "miRNA"], 15))
-cat("\n--- Top 15 mRNA hubs ---\n");         print(head(nodes[class == "mRNA"], 15))
-cat("\n--- Top 20 axes involving NEAT1 ---\n")
-print(head(triads[lncRNA == "NEAT1"], 20))
+cat("\n--- lncRNA hubs (all) ---\n"); print(nodes[class == "lncRNA"])
+cat("\n--- Top 15 miRNA hubs ---\n"); print(head(nodes[class == "miRNA"], 15))
+cat("\n--- Top 15 mRNA hubs ---\n");  print(head(nodes[class == "mRNA"], 15))

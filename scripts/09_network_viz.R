@@ -11,27 +11,76 @@ g <- graph_from_data_frame(edges, directed = FALSE)
 V(g)$class  <- nodes$class[match(V(g)$name, nodes$node)]
 V(g)$degree <- nodes$degree[match(V(g)$name, nodes$node)]
 
-pal <- c(lncRNA = "#E64B35", miRNA = "#F0B429", mRNA = "#4DBBD5")
+pal  <- c(lncRNA = "#E64B35", miRNA = "#F0B429", mRNA = "#4DBBD5")
+xpos <- c(lncRNA = 0, miRNA = 1, mRNA = 2)
 V(g)$color <- pal[V(g)$class]
-V(g)$size  <- 2.5 + 2.2 * sqrt(V(g)$degree)
-V(g)$label <- ifelse(V(g)$degree >= 5 | V(g)$class == "lncRNA", V(g)$name, NA)
+V(g)$size  <- pmin(2 + 1.8 * sqrt(V(g)$degree), 15)
 
-# ---------- Figure 1: full network ----------
+top_mir  <- head(nodes[class == "miRNA"][order(-degree)]$node, 8)
+top_mrna <- head(nodes[class == "mRNA"][order(-degree)]$node, 8)
+keep_lab <- c(nodes[class == "lncRNA"]$node, top_mir, top_mrna)
+V(g)$label <- ifelse(V(g)$name %in% keep_lab, V(g)$name, NA)
+
+# helper: legend placed OUTSIDE the plot, in the bottom margin
+add_legend <- function() {
+  legend("bottom", legend = names(pal), pt.bg = pal, pch = 21,
+         pt.cex = 1.3, cex = 0.8, bty = "n", horiz = TRUE,
+         inset = c(0, -0.055), xpd = TRUE)
+}
+
+# ---------- Figure 1a: full network, force-directed ----------
 set.seed(42)
-lay <- layout_with_fr(g)
+lay <- layout_with_fr(g, niter = 3000)
 
-pdf("results/figures/cerna_network.pdf", width = 12, height = 12)
-par(mar = c(1, 1, 3, 1))
-plot(g, layout = lay,
-     vertex.frame.color = "grey40",
-     vertex.label.cex = 0.5, vertex.label.color = "black",
-     vertex.label.dist = 0.35, vertex.label.family = "sans",
-     edge.color = "grey85", edge.width = 0.6,
+pdf("results/figures/cerna_network.pdf", width = 14, height = 14)
+par(mar = c(6, 1, 3, 1))
+plot(g, layout = lay, rescale = TRUE,
+     vertex.frame.color = "grey45",
+     vertex.label.cex = 0.65, vertex.label.color = "black",
+     vertex.label.font = 2,
+     vertex.label.dist = 1.4, vertex.label.degree = -pi/2,
+     edge.color = adjustcolor("grey70", alpha.f = 0.45), edge.width = 0.5,
      main = "T2D vs ND ceRNA network  (lncRNA - miRNA - mRNA)")
-legend("bottomleft", legend = names(pal), pt.bg = pal, pch = 21,
-       pt.cex = 2, bty = "n", title = "Node class")
-mtext(sprintf("%d nodes, %d edges | labels shown for hubs (degree >= 5) and all lncRNAs",
-              vcount(g), ecount(g)), side = 1, cex = 0.8)
+add_legend()
+mtext(sprintf("%d nodes, %d edges | labels: all lncRNAs + top 8 miRNA/mRNA hubs",
+              vcount(g), ecount(g)), side = 1, line = 3, cex = 0.85)
+dev.off()
+
+# ---------- Figure 1b: layered view of the network CORE ----------
+top_hub_mir <- head(nodes[class == "miRNA"][order(-degree)]$node, 12)
+core_edges  <- edges[(type == "lncRNA-miRNA" & to   %in% top_hub_mir) |
+                       (type == "miRNA-mRNA"   & from %in% top_hub_mir)]
+
+gc2 <- graph_from_data_frame(core_edges, directed = FALSE)
+V(gc2)$class  <- nodes$class[match(V(gc2)$name, nodes$node)]
+V(gc2)$degree <- degree(gc2)
+V(gc2)$color  <- pal[V(gc2)$class]
+V(gc2)$size   <- pmin(3 + 1.6 * sqrt(V(gc2)$degree), 12)
+V(gc2)$label  <- V(gc2)$name
+
+lay3 <- matrix(0, nrow = vcount(gc2), ncol = 2)
+for (cc in names(xpos)) {
+  idx <- which(V(gc2)$class == cc)
+  idx <- idx[order(V(gc2)$degree[idx], decreasing = TRUE)]
+  lay3[idx, 1] <- xpos[[cc]]
+  lay3[idx, 2] <- if (length(idx) == 1) 0 else seq(-1, 1, length.out = length(idx))
+}
+
+lab_deg <- ifelse(V(gc2)$class == "lncRNA", pi,
+                  ifelse(V(gc2)$class == "mRNA",   0, -pi/2))
+
+pdf("results/figures/cerna_network_layered.pdf", width = 12, height = 13)
+par(mar = c(6, 1, 3, 1))
+plot(gc2, layout = lay3, rescale = TRUE,
+     vertex.frame.color = "grey45",
+     vertex.label.cex = 0.5, vertex.label.color = "black",
+     vertex.label.dist = 1.1, vertex.label.degree = lab_deg,
+     edge.color = adjustcolor("grey65", alpha.f = 0.45), edge.width = 0.5,
+     edge.curved = 0.1,
+     main = "ceRNA network core:  lncRNA  ->  miRNA (top 12 hubs)  ->  mRNA")
+add_legend()
+mtext(sprintf("%d nodes, %d edges | restricted to the 12 highest-degree miRNAs for legibility",
+              vcount(gc2), ecount(gc2)), side = 1, line = 3, cex = 0.85)
 dev.off()
 
 # ---------- Figure 2: focused NEAT1 - miR-29 axis ----------
@@ -46,16 +95,15 @@ V(gs)$size  <- ifelse(V(gs)$class == "lncRNA", 22,
 V(gs)$label <- V(gs)$name
 
 set.seed(7)
-pdf("results/figures/cerna_NEAT1_miR29_axis.pdf", width = 9, height = 8)
-par(mar = c(1, 1, 3, 1))
-plot(gs, layout = layout_with_fr(gs),
+pdf("results/figures/cerna_NEAT1_miR29_axis.pdf", width = 9, height = 8.5)
+par(mar = c(5, 1, 3, 1))
+plot(gs, layout = layout_with_fr(gs, niter = 3000),
      vertex.frame.color = "grey30",
      vertex.label.cex = 0.65, vertex.label.color = "black",
-     vertex.label.family = "sans",
+     vertex.label.dist = 0,
      edge.color = "grey70", edge.width = 1,
      main = "NEAT1 - miR-29 family - ECM target axis")
-legend("bottomleft", legend = names(pal), pt.bg = pal, pch = 21,
-       pt.cex = 2, bty = "n", title = "Node class")
+add_legend()
 dev.off()
 
 # ---------- Hub analysis table ----------
@@ -63,9 +111,8 @@ nodes[, betweenness := betweenness(g, v = node, directed = FALSE)]
 setorder(nodes, -degree)
 fwrite(nodes, "results/tables/cerna_hubs.csv")
 
-cat("Saved: cerna_network.pdf, cerna_NEAT1_miR29_axis.pdf, cerna_hubs.csv\n\n")
-cat("--- Top 10 hubs overall (degree) ---\n"); print(head(nodes, 10))
-cat("\n--- Top 10 by betweenness (bridging nodes) ---\n")
-print(head(nodes[order(-betweenness)], 10))
+cat("Saved: cerna_network.pdf, cerna_network_layered.pdf,",
+    "cerna_NEAT1_miR29_axis.pdf, cerna_hubs.csv\n\n")
+cat("--- Top 10 hubs (degree) ---\n");   print(head(nodes, 10))
+cat("\n--- Top 10 (betweenness) ---\n"); print(head(nodes[order(-betweenness)], 10))
 cat("\nNEAT1-miR-29 axis:", vcount(gs), "nodes |", ecount(gs), "edges\n")
-cat("miR-29 family targets:\n"); print(sort(mir29_tgt))
