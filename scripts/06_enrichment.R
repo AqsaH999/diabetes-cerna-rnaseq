@@ -48,15 +48,52 @@ kk <- tryCatch({
 
 if (!is.null(kk)) fwrite(as.data.frame(kk), "results/tables/KEGG.csv")
 
-# --- Figures (only drawn if there are results) ---
-if (nrow(as.data.frame(ego)) > 0)
-  ggsave("results/figures/GO_dotplot.pdf",      dotplot(ego,         showCategory = 20), width = 9, height = 8)
-if (nrow(as.data.frame(ego_up)) > 0)
-  ggsave("results/figures/GO_dotplot_up.pdf",   dotplot(ego_up,      showCategory = 20), width = 9, height = 8)
-if (nrow(as.data.frame(ego_down_rx)) > 0)
-  ggsave("results/figures/GO_dotplot_down.pdf", dotplot(ego_down_rx, showCategory = 20), width = 9, height = 8)
+# --- Publication-quality dotplots ---
+library(enrichplot)
+
+# Collapse redundant GO terms by semantic similarity (keeps best representative)
+ego_up_s <- tryCatch(simplify(ego_up,      cutoff = 0.7, by = "p.adjust", select_fun = min),
+                     error = function(e) ego_up)
+ego_dn_s <- tryCatch(simplify(ego_down_rx, cutoff = 0.7, by = "p.adjust", select_fun = min),
+                     error = function(e) ego_down_rx)
+
+cat("\nGO terms before/after simplify:  up:", nrow(as.data.frame(ego_up)),
+    "->", nrow(as.data.frame(ego_up_s)),
+    " | down:", nrow(as.data.frame(ego_down_rx)),
+    "->", nrow(as.data.frame(ego_dn_s)), "\n")
+
+make_dot <- function(x, title, n = 15) {
+  dotplot(x, showCategory = n, label_format = 45) +
+    labs(title = title) +
+    theme_bw(base_size = 10) +
+    theme(axis.text.y      = element_text(size = 8, lineheight = 0.95),
+          axis.text.x      = element_text(size = 9),
+          axis.title       = element_text(size = 10),
+          plot.title       = element_text(size = 11, face = "bold"),
+          legend.title     = element_text(size = 9),
+          legend.text      = element_text(size = 8),
+          legend.key.size  = grid::unit(0.4, "cm"),
+          panel.grid.minor = element_blank())
+}
+
+if (nrow(as.data.frame(ego_up_s)) > 0)
+  ggsave("results/figures/GO_dotplot_up.pdf",
+         make_dot(ego_up_s, "GO Biological Process - up in T2D"),
+         width = 7.5, height = 6)
+
+if (nrow(as.data.frame(ego_dn_s)) > 0)
+  ggsave("results/figures/GO_dotplot_down.pdf",
+         make_dot(ego_dn_s, "GO Biological Process - down in T2D"),
+         width = 7.5, height = 6)
+
 if (!is.null(kk) && nrow(as.data.frame(kk)) > 0)
-  ggsave("results/figures/KEGG_dotplot.pdf",    dotplot(kk,          showCategory = 20), width = 9, height = 8)
+  ggsave("results/figures/KEGG_dotplot.pdf",
+         make_dot(kk, "KEGG pathways - DE mRNAs"),
+         width = 7.5, height = 6)
+
+# also save the simplified tables (what the figures actually show)
+fwrite(as.data.frame(ego_up_s), "results/tables/GO_BP_up_simplified.csv")
+fwrite(as.data.frame(ego_dn_s), "results/tables/GO_BP_down_simplified.csv")
 
 # --- Console summary ---
 cat("\n--- Top GO terms (UP in T2D) ---\n")

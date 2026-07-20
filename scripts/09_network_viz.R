@@ -1,5 +1,6 @@
 # ==========================================================
 # 09_network_viz.R — ceRNA network figures + hub analysis
+# (run AFTER 08_network.R)
 # ==========================================================
 setwd("~/Desktop/diabetes-cerna-rnaseq")
 library(data.table); library(igraph)
@@ -21,11 +22,11 @@ top_mrna <- head(nodes[class == "mRNA"][order(-degree)]$node, 8)
 keep_lab <- c(nodes[class == "lncRNA"]$node, top_mir, top_mrna)
 V(g)$label <- ifelse(V(g)$name %in% keep_lab, V(g)$name, NA)
 
-# helper: legend placed OUTSIDE the plot, in the bottom margin
+# legend drawn OUTSIDE the plot, in the bottom margin
 add_legend <- function() {
   legend("bottom", legend = names(pal), pt.bg = pal, pch = 21,
          pt.cex = 1.3, cex = 0.8, bty = "n", horiz = TRUE,
-         inset = c(0, -0.055), xpd = TRUE)
+         inset = c(0, -0.05), xpd = TRUE)
 }
 
 # ---------- Figure 1a: full network, force-directed ----------
@@ -46,16 +47,20 @@ mtext(sprintf("%d nodes, %d edges | labels: all lncRNAs + top 8 miRNA/mRNA hubs"
               vcount(g), ecount(g)), side = 1, line = 3, cex = 0.85)
 dev.off()
 
-# ---------- Figure 1b: layered view of the network CORE ----------
-top_hub_mir <- head(nodes[class == "miRNA"][order(-degree)]$node, 12)
-core_edges  <- edges[(type == "lncRNA-miRNA" & to   %in% top_hub_mir) |
-                       (type == "miRNA-mRNA"   & from %in% top_hub_mir)]
+# ---------- Figure 1b: layered view, ALL 10 lncRNAs represented ----------
+lm_e <- edges[type == "lncRNA-miRNA"]
+lm_e[, mir_deg := nodes$degree[match(to, nodes$node)]]
+setorder(lm_e, from, -mir_deg)
+sel_mir <- unique(lm_e[, head(.SD, 4), by = from]$to)     # top 4 miRNAs per lncRNA
+
+core_edges <- edges[(type == "lncRNA-miRNA" & to   %in% sel_mir) |
+                      (type == "miRNA-mRNA"   & from %in% sel_mir)]
 
 gc2 <- graph_from_data_frame(core_edges, directed = FALSE)
 V(gc2)$class  <- nodes$class[match(V(gc2)$name, nodes$node)]
 V(gc2)$degree <- degree(gc2)
 V(gc2)$color  <- pal[V(gc2)$class]
-V(gc2)$size   <- pmin(3 + 1.6 * sqrt(V(gc2)$degree), 12)
+V(gc2)$size   <- pmin(pmax(3 + 1.6 * sqrt(V(gc2)$degree), 7), 12)
 V(gc2)$label  <- V(gc2)$name
 
 lay3 <- matrix(0, nrow = vcount(gc2), ncol = 2)
@@ -66,22 +71,24 @@ for (cc in names(xpos)) {
   lay3[idx, 2] <- if (length(idx) == 1) 0 else seq(-1, 1, length.out = length(idx))
 }
 
-lab_deg <- ifelse(V(gc2)$class == "lncRNA", pi,
-                  ifelse(V(gc2)$class == "mRNA",   0, -pi/2))
+# miRNA labels centred ON the node; lncRNA labels left; mRNA labels right
+lab_deg <- ifelse(V(gc2)$class == "lncRNA", pi, 0)
+lab_dst <- ifelse(V(gc2)$class == "miRNA", 0, 1.4)
 
-pdf("results/figures/cerna_network_layered.pdf", width = 12, height = 13)
+pdf("results/figures/cerna_network_layered.pdf", width = 12, height = 14)
 par(mar = c(6, 1, 3, 1))
 plot(gc2, layout = lay3, rescale = TRUE,
      vertex.frame.color = "grey45",
      vertex.label.cex = 0.5, vertex.label.color = "black",
-     vertex.label.dist = 1.1, vertex.label.degree = lab_deg,
-     edge.color = adjustcolor("grey65", alpha.f = 0.45), edge.width = 0.5,
+     vertex.label.dist = lab_dst, vertex.label.degree = lab_deg,
+     edge.color = adjustcolor("grey65", alpha.f = 0.4), edge.width = 0.5,
      edge.curved = 0.1,
-     main = "ceRNA network core:  lncRNA  ->  miRNA (top 12 hubs)  ->  mRNA")
+     main = "ceRNA network:  all 10 DE lncRNAs  ->  miRNA  ->  mRNA")
 add_legend()
-mtext(sprintf("%d nodes, %d edges | restricted to the 12 highest-degree miRNAs for legibility",
+mtext(sprintf("%d nodes, %d edges | top 4 miRNA partners shown per lncRNA",
               vcount(gc2), ecount(gc2)), side = 1, line = 3, cex = 0.85)
 dev.off()
+cat("lncRNAs shown in layered figure:", sum(V(gc2)$class == "lncRNA"), "of 10\n")
 
 # ---------- Figure 2: focused NEAT1 - miR-29 axis ----------
 mir29     <- grep("^hsa-miR-29", nodes$node, value = TRUE)
@@ -111,7 +118,7 @@ nodes[, betweenness := betweenness(g, v = node, directed = FALSE)]
 setorder(nodes, -degree)
 fwrite(nodes, "results/tables/cerna_hubs.csv")
 
-cat("Saved: cerna_network.pdf, cerna_network_layered.pdf,",
+cat("\nSaved: cerna_network.pdf, cerna_network_layered.pdf,",
     "cerna_NEAT1_miR29_axis.pdf, cerna_hubs.csv\n\n")
 cat("--- Top 10 hubs (degree) ---\n");   print(head(nodes, 10))
 cat("\n--- Top 10 (betweenness) ---\n"); print(head(nodes[order(-betweenness)], 10))
