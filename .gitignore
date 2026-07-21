@@ -16,3 +16,4 @@ how_to_read_qc*.pdf
 .DS_Store
 *.log
 how_to_read_qc*.pdf
+.Rproj.user
