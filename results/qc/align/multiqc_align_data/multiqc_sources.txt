@@ -1,0 +1,13 @@
+Module	Section	Sample Name	Source
+HISAT2	all_sections	SRR13380421	/Users/burhanshah/Desktop/diabetes-cerna-rnaseq/results/qc/align/SRR13380421.hisat2.log
+HISAT2	all_sections	SRR13380425	/Users/burhanshah/Desktop/diabetes-cerna-rnaseq/results/qc/align/SRR13380425.hisat2.log
+HISAT2	all_sections	SRR13380426	/Users/burhanshah/Desktop/diabetes-cerna-rnaseq/results/qc/align/SRR13380426.hisat2.log
+HISAT2	all_sections	SRR13380427	/Users/burhanshah/Desktop/diabetes-cerna-rnaseq/results/qc/align/SRR13380427.hisat2.log
+HISAT2	all_sections	SRR13380430	/Users/burhanshah/Desktop/diabetes-cerna-rnaseq/results/qc/align/SRR13380430.hisat2.log
+HISAT2	all_sections	SRR13380434	/Users/burhanshah/Desktop/diabetes-cerna-rnaseq/results/qc/align/SRR13380434.hisat2.log
+HISAT2	all_sections	SRR13380441	/Users/burhanshah/Desktop/diabetes-cerna-rnaseq/results/qc/align/SRR13380441.hisat2.log
+HISAT2	all_sections	SRR13380446	/Users/burhanshah/Desktop/diabetes-cerna-rnaseq/results/qc/align/SRR13380446.hisat2.log
+HISAT2	all_sections	SRR13380448	/Users/burhanshah/Desktop/diabetes-cerna-rnaseq/results/qc/align/SRR13380448.hisat2.log
+HISAT2	all_sections	SRR13380458	/Users/burhanshah/Desktop/diabetes-cerna-rnaseq/results/qc/align/SRR13380458.hisat2.log
+HISAT2	all_sections	SRR13380466	/Users/burhanshah/Desktop/diabetes-cerna-rnaseq/results/qc/align/SRR13380466.hisat2.log
+HISAT2	all_sections	SRR13380471	/Users/burhanshah/Desktop/diabetes-cerna-rnaseq/results/qc/align/SRR13380471.hisat2.log
