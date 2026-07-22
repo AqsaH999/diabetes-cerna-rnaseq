@@ -17,3 +17,8 @@ how_to_read_qc*.pdf
 *.log
 how_to_read_qc*.pdf
 .Rproj.user
+
+.Rapp.history
+data/processed/series_matrix.txt.gz
+*copy.pdf
+results/qc/
