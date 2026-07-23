@@ -22,3 +22,8 @@ how_to_read_qc*.pdf
 data/processed/series_matrix.txt.gz
 *copy.pdf
 results/qc/
+
+.Rapp.history
+data/processed/series_matrix.txt.gz
+*copy.pdf
+results/qc/
