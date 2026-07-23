@@ -1,4 +1,6 @@
-# Project Report - Diabetic vs Control RNA-seq to ceRNA Network
+# ceRNA Network Reconstruction in Type 2 Diabetic Pancreatic Islets
+
+### Reproducible RNA-seq pipeline (raw FASTQ → validated counts → lncRNA–miRNA–mRNA network) on GSE164416, uncovering a NEAT1–miR-29–collagen axis
 
 **Dataset:** GSE164416 (Wigger et al., *Nature Metabolism* 2021) - human pancreatic islets,
 laser-capture microdissected, non-diabetic (ND) vs type-2-diabetic (T2D) donors.
