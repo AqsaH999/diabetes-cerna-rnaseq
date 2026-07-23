@@ -1,4 +1,4 @@
-# Diabetic vs Control RNA-seq → ceRNA Network (GSE164416)
+# ceRNA Network Reconstruction in Type 2 Diabetic Pancreatic Islets
 
 A from-scratch, reproducible RNA-seq pipeline for human pancreatic islets that takes raw
 sequencing reads all the way to a **competing-endogenous-RNA (ceRNA) network** — identifying
